@@ -11,10 +11,11 @@
 &ensp;&ensp;&ensp;Ansible (https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html).<br/>
 &ensp;&ensp;&ensp;Все действия проводились с использованием Vagrant 2.4.0, VirtualBox 7.0.14,<br/> Ansible 9.3.0 и образа CentOS 7 версии 1804_2.<br/> 
 ### Ход решения ###
+#### Разрешение в SELinux работы сервиса NGINX на порту TCP 4881 с помощью переключателей setsebool ####
 1. С помощью предложенного Vagrant-файла запускаем виртуальную машину с установленным NGINX,<br/>
 который работает на порту TCP 4881. Этот порт проброшен до хостовой машины. SELinux включен.<br/>
 2. Во время развёртывания стенда, попытка запуска NGINX завершается с ошибкой. Проверяем состояние <br/>
-сервиса NGINX и пробуем повторно его запутсить:<br/>
+сервиса NGINX и пробуем повторно его запустить:<br/>
 ```shell
 [vagrant@selinux ~]$ sudo -i
 [root@selinux ~]# systemctl status nginx
@@ -102,4 +103,16 @@ LISTEN     0      100                                                           
 [root@selinux ~]# getsebool -a | grep nis_enabled
 nis_enabled --> on
 ```
-![изображение](https://github.com/DemBeshtau/12_1_DZ/assets/149678567/6d0d3bf1-ed57-4681-925c-6e785fa99663)
+![изображение](https://github.com/DemBeshtau/12_1_DZ/assets/149678567/7ab46b3d-90b0-41dc-9a6d-02099d612a1f)
+
+6. Возврат настроек к прежнему состоянию:<br/>
+```shell
+[root@selinux ~]# getsebool -P nis_enabled off
+
+[root@selinux ~]# systemctl restart nginx
+Job for nginx.service failed because the control process exited with error code. See "systemctl status nginx.service" and "journalctl -xe" for details.
+```
+7. Разрешение в SELinux работы сервиса NGINX на порту TCP 4881 с помощью добавления нестандартного порта<br/>
+в имеющийся тип:<br/>
+
+
