@@ -1,0 +1,309 @@
+dem@calculate ~/vagrant/12_DZ vagrant up
+
+Bringing machine 'selinux' up with 'virtualbox' provider...
+==> selinux: Clearing any previously set forwarded ports...
+==> selinux: Clearing any previously set network interfaces...
+==> selinux: Preparing network interfaces based on configuration...
+    selinux: Adapter 1: nat
+==> selinux: Forwarding ports...
+    selinux: 4881 (guest) => 4881 (host) (adapter 1)
+    selinux: 22 (guest) => 2222 (host) (adapter 1)
+==> selinux: Running 'pre-boot' VM customizations...
+==> selinux: Booting VM...
+==> selinux: Waiting for machine to boot. This may take a few minutes...
+    selinux: SSH address: 127.0.0.1:2222
+    selinux: SSH username: vagrant
+    selinux: SSH auth method: private key
+==> selinux: Machine booted and ready!
+==> selinux: Checking for guest additions in VM...
+    selinux: No guest additions were detected on the base box for this VM! Guest
+    selinux: additions are required for forwarded ports, shared folders, host only
+    selinux: networking, and more. If SSH fails on this machine, please install
+    selinux: the guest additions and repackage the box to continue.
+    selinux: 
+    selinux: This is not an error message; everything may continue to work properly,
+    selinux: in which case you may ignore this message.
+==> selinux: Setting hostname...
+==> selinux: Rsyncing folder: /home/dem/vagrant/12_DZ/ => /vagrant
+==> selinux: Machine already provisioned. Run `vagrant provision` or use the `--provision`
+==> selinux: flag to force provisioning. Provisioners marked to run always will still run.
+dem@calculate ~/vagrant/12_DZ $ vagrant ssh
+
+Last login: Thu May 30 08:36:39 2024 from 10.0.2.2
+
+[vagrant@selinux ~]$ sudo -i
+[root@selinux ~]# cat /etc/nginx/nginx.conf
+# For more information on configuration, see:
+#   * Official English Documentation: http://nginx.org/en/docs/
+#   * Official Russian Documentation: http://nginx.org/ru/docs/
+
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+
+# Load dynamic modules. See /usr/share/doc/nginx/README.dynamic.
+include /usr/share/nginx/modules/*.conf;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    keepalive_timeout   65;
+    types_hash_max_size 4096;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    # Load modular configuration files from the /etc/nginx/conf.d directory.
+    # See http://nginx.org/en/docs/ngx_core_module.html#include
+    # for more information.
+    include /etc/nginx/conf.d/*.conf;
+
+    server {
+        listen       4881;
+        listen       [::]:4881;
+        server_name  _;
+        root         /usr/share/nginx/html;
+
+        # Load configuration files for the default server block.
+        include /etc/nginx/default.d/*.conf;
+
+        error_page 404 /404.html;
+        location = /404.html {
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+        }
+    }
+
+# Settings for a TLS enabled server.
+#
+#    server {
+#        listen       443 ssl http2;
+#        listen       [::]:443 ssl http2;
+#        server_name  _;
+#        root         /usr/share/nginx/html;
+#
+#        ssl_certificate "/etc/pki/nginx/server.crt";
+#        ssl_certificate_key "/etc/pki/nginx/private/server.key";
+#        ssl_session_cache shared:SSL:1m;
+#        ssl_session_timeout  10m;
+#        ssl_ciphers HIGH:!aNULL:!MD5;
+#        ssl_prefer_server_ciphers on;
+#
+#        # Load configuration files for the default server block.
+#        include /etc/nginx/default.d/*.conf;
+#
+#        error_page 404 /404.html;
+#            location = /40x.html {
+#        }
+#
+#        error_page 500 502 503 504 /50x.html;
+#            location = /50x.html {
+#        }
+#    }
+
+}
+
+[root@selinux ~]# systemctl status nginx
+● nginx.service - The nginx HTTP and reverse proxy server
+   Loaded: loaded (/usr/lib/systemd/system/nginx.service; disabled; vendor preset: disabled)
+   Active: inactive (dead)
+[root@selinux ~]# systemctl start nginx
+Job for nginx.service failed because the control process exited with error code. See "systemctl status nginx.service" and "journalctl -xe" for details.
+[root@selinux ~]# systemctl status nginx
+ nginx.service - The nginx HTTP and reverse proxy server
+   Loaded: loaded (/usr/lib/systemd/system/nginx.service; disabled; vendor preset: disabled)
+   Active: failed (Result: exit-code) since Thu 2024-05-30 12:27:19 UTC; 10s ago
+  Process: 2242 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=1/FAILURE)
+  Process: 2240 ExecStartPre=/usr/bin/rm -f /run/nginx.pid (code=exited, status=0/SUCCESS)
+
+May 30 12:27:19 selinux systemd[1]: Starting The nginx HTTP and reverse proxy server...
+May 30 12:27:19 selinux nginx[2242]: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+May 30 12:27:19 selinux nginx[2242]: nginx: [emerg] bind() to 0.0.0.0:4881 failed (13: Permission denied)
+May 30 12:27:19 selinux nginx[2242]: nginx: configuration file /etc/nginx/nginx.conf test failed
+May 30 12:27:19 selinux systemd[1]: nginx.service: control process exited, code=exited status=1
+May 30 12:27:19 selinux systemd[1]: Failed to start The nginx HTTP and reverse proxy server.
+May 30 12:27:19 selinux systemd[1]: Unit nginx.service entered failed state.
+May 30 12:27:19 selinux systemd[1]: nginx.service failed.
+
+[root@selinux ~]# nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+[root@selinux ~]# getenforce
+Enforcing
+
+[root@selinux ~]# echo > /var/log/audit/audit.log 
+[root@selinux ~]# systemctl start nginx
+Job for nginx.service failed because the control process exited with error code. See "systemctl status nginx.service" and "journalctl -xe" for details.
+
+[root@selinux ~]# cat /var/log/audit/audit.log | audit2why
+type=AVC msg=audit(1717072185.958:557): avc:  denied  { name_bind } for  pid=2288 comm="nginx" src=4881 scontext=system_u:system_r:httpd_t:s0 tcontext=system_u:object_r:unreserved_port_t:s0 tclass=tcp_socket
+
+	Was caused by:
+	The boolean nis_enabled was set incorrectly. 
+	Description:
+	Allow nis to enabled
+
+	Allow access by executing:
+	# setsebool -P nis_enabled 1
+
+[root@selinux ~]# setsebool -P nis_enabled on
+
+[root@selinux ~]# systemctl start nginx
+
+[root@selinux ~]# systemctl status nginx
+ nginx.service - The nginx HTTP and reverse proxy server
+   Loaded: loaded (/usr/lib/systemd/system/nginx.service; disabled; vendor preset: disabled)
+   Active: active (running) since Thu 2024-05-30 12:32:51 UTC; 12s ago
+  Process: 2337 ExecStart=/usr/sbin/nginx (code=exited, status=0/SUCCESS)
+  Process: 2335 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=0/SUCCESS)
+  Process: 2334 ExecStartPre=/usr/bin/rm -f /run/nginx.pid (code=exited, status=0/SUCCESS)
+ Main PID: 2339 (nginx)
+   CGroup: /system.slice/nginx.service
+           ├─2339 nginx: master process /usr/sbin/nginx
+           └─2341 nginx: worker process
+
+May 30 12:32:51 selinux systemd[1]: Starting The nginx HTTP and reverse proxy server...
+May 30 12:32:51 selinux nginx[2335]: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+May 30 12:32:51 selinux nginx[2335]: nginx: configuration file /etc/nginx/nginx.conf test is successful
+May 30 12:32:51 selinux systemd[1]: Started The nginx HTTP and reverse proxy server.
+
+[root@selinux ~]# ss -ntlp
+State      Recv-Q Send-Q                                                                                             Local Address:Port                                                                                                            Peer Address:Port              
+LISTEN     0      128                                                                                                            *:111                                                                                                                        *:*                   users:(("rpcbind",pid=576,fd=8))
+LISTEN     0      128                                                                                                            *:4881                                                                                                                       *:*                   users:(("nginx",pid=2341,fd=6),("nginx",pid=2339,fd=6))
+LISTEN     0      128                                                                                                            *:22                                                                                                                         *:*                   users:(("sshd",pid=818,fd=3))
+LISTEN     0      100                                                                                                    127.0.0.1:25                                                                                                                         *:*                   users:(("master",pid=1020,fd=13))
+LISTEN     0      128                                                                                                           :::111                                                                                                                       :::*                   users:(("rpcbind",pid=576,fd=11))
+LISTEN     0      128                                                                                                           :::4881                                                                                                                      :::*                   users:(("nginx",pid=2341,fd=7),("nginx",pid=2339,fd=7))
+LISTEN     0      128                                                                                                           :::22                                                                                                                        :::*                   users:(("sshd",pid=818,fd=4))
+LISTEN     0      100                                                                                                          ::1:25                                                                                                                        :::*                   users:(("master",pid=1020,fd=14))
+
+[root@selinux ~]# getsebool -a | grep nis_enabled
+nis_enabled --> on
+
+[root@selinux ~]# getsebool -P nis_enabled off
+
+[root@selinux ~]# systemctl restart nginx
+Job for nginx.service failed because the control process exited with error code. See "systemctl status nginx.service" and "journalctl -xe" for details.
+
+[root@selinux ~]# semanage port -l | grep http
+http_cache_port_t              tcp      8080, 8118, 8123, 10001-10010
+http_cache_port_t              udp      3130
+http_port_t                    tcp      80, 81, 443, 488, 8008, 8009, 8443, 9000
+pegasus_http_port_t            tcp      5988
+pegasus_http_port_t            tcp      5989
+
+[root@selinux ~]# semanage port -a -t http_port_t -p tcp 4881 
+
+[root@selinux ~]# systemctl start nginx
+
+[root@selinux ~]# systemctl status nginx
+ nginx.service - The nginx HTTP and reverse proxy server
+   Loaded: loaded (/usr/lib/systemd/system/nginx.service; disabled; vendor preset: disabled)
+   Active: active (running) since Thu 2024-05-30 12:40:14 UTC; 18s ago
+  Process: 2415 ExecStart=/usr/sbin/nginx (code=exited, status=0/SUCCESS)
+  Process: 2413 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=0/SUCCESS)
+  Process: 2412 ExecStartPre=/usr/bin/rm -f /run/nginx.pid (code=exited, status=0/SUCCESS)
+ Main PID: 2417 (nginx)
+   CGroup: /system.slice/nginx.service
+           ├─2417 nginx: master process /usr/sbin/nginx
+           └─2418 nginx: worker process
+
+May 30 12:40:14 selinux systemd[1]: Starting The nginx HTTP and reverse proxy server...
+May 30 12:40:14 selinux nginx[2413]: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+May 30 12:40:14 selinux nginx[2413]: nginx: configuration file /etc/nginx/nginx.conf test is successful
+May 30 12:40:14 selinux systemd[1]: Started The nginx HTTP and reverse proxy server.
+
+[root@selinux ~]# semanage port -l | grep http
+http_cache_port_t              tcp      8080, 8118, 8123, 10001-10010
+http_cache_port_t              udp      3130
+http_port_t                    tcp      4881, 80, 81, 443, 488, 8008, 8009, 8443, 9000
+pegasus_http_port_t            tcp      5988
+pegasus_http_port_t            tcp      5989
+
+[root@selinux ~]# semanage port -d -t http_port_t -p tcp 4881
+
+[root@selinux ~]# semanage port -l | grep http
+http_cache_port_t              tcp      8080, 8118, 8123, 10001-10010
+http_cache_port_t              udp      3130
+http_port_t                    tcp      80, 81, 443, 488, 8008, 8009, 8443, 9000
+pegasus_http_port_t            tcp      5988
+pegasus_http_port_t            tcp      5989
+
+[root@selinux ~]# systemctl start nginx
+Job for nginx.service failed because the control process exited with error code. See "systemctl status nginx.service" and "journalctl -xe" for details.
+
+[root@selinux ~]# grep nginx /var/log/audit/audit.log | audit2allow -M nginx 
+******************** IMPORTANT ***********************
+To make this policy package active, execute:
+
+semodule -i nginx.pp
+
+[root@selinux ~]# semodule -i nginx.pp
+[root@selinux ~]# systemctl start nginx
+[root@selinux ~]# systemctl status nginx
+ nginx.service - The nginx HTTP and reverse proxy server
+   Loaded: loaded (/usr/lib/systemd/system/nginx.service; disabled; vendor preset: disabled)
+   Active: active (running) since Thu 2024-05-30 12:44:59 UTC; 15s ago
+  Process: 2492 ExecStart=/usr/sbin/nginx (code=exited, status=0/SUCCESS)
+  Process: 2490 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=0/SUCCESS)
+  Process: 2489 ExecStartPre=/usr/bin/rm -f /run/nginx.pid (code=exited, status=0/SUCCESS)
+ Main PID: 2494 (nginx)
+   CGroup: /system.slice/nginx.service
+           ├─2494 nginx: master process /usr/sbin/nginx
+           └─2496 nginx: worker process
+
+May 30 12:44:59 selinux systemd[1]: Starting The nginx HTTP and reverse proxy server...
+May 30 12:44:59 selinux nginx[2490]: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+May 30 12:44:59 selinux nginx[2490]: nginx: configuration file /etc/nginx/nginx.conf test is successful
+May 30 12:44:59 selinux systemd[1]: Started The nginx HTTP and reverse proxy server.
+
+[root@selinux ~]# semodule -r nginx
+libsemanage.semanage_direct_remove_key: Removing last nginx module (no other nginx module exists at another priority).
+
+[root@selinux ~]# systemctl restart nginx
+Job for nginx.service failed because the control process exited with error code. See "systemctl status nginx.service" and "journalctl -xe" for details.
+
+[root@selinux ~]# systemctl status nginx
+ nginx.service - The nginx HTTP and reverse proxy server
+   Loaded: loaded (/usr/lib/systemd/system/nginx.service; disabled; vendor preset: disabled)
+   Active: failed (Result: exit-code) since Thu 2024-05-30 12:47:39 UTC; 19s ago
+  Process: 2492 ExecStart=/usr/sbin/nginx (code=exited, status=0/SUCCESS)
+  Process: 2517 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=1/FAILURE)
+  Process: 2516 ExecStartPre=/usr/bin/rm -f /run/nginx.pid (code=exited, status=0/SUCCESS)
+ Main PID: 2494 (code=exited, status=0/SUCCESS)
+
+May 30 12:47:39 selinux systemd[1]: Stopped The nginx HTTP and reverse proxy server.
+May 30 12:47:39 selinux systemd[1]: Starting The nginx HTTP and reverse proxy server...
+May 30 12:47:39 selinux nginx[2517]: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+May 30 12:47:39 selinux nginx[2517]: nginx: [emerg] bind() to 0.0.0.0:4881 failed (13: Permission denied)
+May 30 12:47:39 selinux nginx[2517]: nginx: configuration file /etc/nginx/nginx.conf test failed
+May 30 12:47:39 selinux systemd[1]: nginx.service: control process exited, code=exited status=1
+May 30 12:47:39 selinux systemd[1]: Failed to start The nginx HTTP and reverse proxy server.
+May 30 12:47:39 selinux systemd[1]: Unit nginx.service entered failed state.
+May 30 12:47:39 selinux systemd[1]: nginx.service failed.
+
+[root@selinux ~]# exit
+logout
+
+[vagrant@selinux ~]$ exit
+logout
+dem@calculate ~/vagrant/12_DZ $ exit
+exit
+
+Script done on 2024-05-30 15:48:19+03:00 [COMMAND_EXIT_CODE="3"]
