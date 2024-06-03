@@ -112,7 +112,6 @@ nis_enabled --> on
 [root@selinux ~]# systemctl restart nginx
 Job for nginx.service failed because the control process exited with error code. See "systemctl status nginx.service" and "journalctl -xe" for details.
 ```
-7. Разрешение в SELinux работы сервиса NGINX на порту TCP 4881 с помощью добавления нестандартного порта<br/>
-в имеющийся тип:<br/>
+#### Разрешение в SELinux работы сервиса NGINX на порту TCP 4881<br/> с помощью добавления нестандартного порта в имеющийся тип ####
 
 
